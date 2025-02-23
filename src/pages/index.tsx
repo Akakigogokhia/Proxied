@@ -34,7 +34,7 @@ const Home = () => {
   const [updateItemQuantity] = useMutation(UPDATE_ITEM_QUANTITY);
   const { setCart, acknowledged, setAcknowledged } = useCart();
 
-  const [notificationEvent, setNotificationEvent] = useState<any>(null);
+  const [notificationEvents, setNotificationEvents] = useState<any[]>([]);
 
   const computedProducts = useComputedProducts(productsData, cartData);
 
@@ -46,8 +46,6 @@ const Home = () => {
     {}
   );
 
-  //here I try to use the custom hook to only update the necessary product
-  // but the response had item with the old quantity so I decided to make both calls to refresh data
   useSubscription(CART_ITEM_UPDATE, {
     onSubscriptionData: async ({ subscriptionData }) => {
       const eventData = subscriptionData.data?.cartItemUpdate;
@@ -56,13 +54,13 @@ const Home = () => {
         setAcknowledged(false);
         await refetchCart();
         await refetchProducts();
-        setNotificationEvent(eventData);
+        setNotificationEvents((prev) => [...prev, eventData]);
       }
     },
   });
 
   const handleAcknowledge = () => {
-    setNotificationEvent(null);
+    setNotificationEvents([]);
     setAcknowledged(true);
   };
 
@@ -177,9 +175,9 @@ const Home = () => {
         )}
       </div>
 
-      {notificationEvent && !acknowledged && (
+      {notificationEvents?.length && !acknowledged && (
         <NotificationModal
-          eventData={notificationEvent}
+          eventData={notificationEvents}
           onAcknowledge={handleAcknowledge}
         />
       )}

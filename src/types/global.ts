@@ -27,10 +27,12 @@ export interface CartItemUpdatePayload {
 }
 
 export interface CartItemUpdateData {
-  cartItemUpdate: {
-    event: CartItemUpdateEvent;
-    payload: CartItemUpdatePayload;
-  };
+  cartItemUpdate: CartItemUpdate;
+}
+
+export interface CartItemUpdate {
+  event: CartItemUpdateEvent;
+  payload: CartItemUpdatePayload;
 }
 
 export interface GetCartData {

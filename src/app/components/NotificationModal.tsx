@@ -1,16 +1,18 @@
 import React from 'react';
 
-interface NotificationModalProps {
-  eventData: {
-    event: 'ITEM_OUT_OF_STOCK' | 'ITEM_QUANTITY_UPDATED';
-    payload: {
-      _id: string;
-      product: {
-        title: string;
-      };
-      quantity: number;
+interface MessageData {
+  event: 'ITEM_OUT_OF_STOCK' | 'ITEM_QUANTITY_UPDATED';
+  payload: {
+    _id: string;
+    product: {
+      title: string;
     };
+    quantity: number;
   };
+}
+
+interface NotificationModalProps {
+  eventData: MessageData[];
   onAcknowledge: () => void;
 }
 
@@ -18,14 +20,14 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
   eventData,
   onAcknowledge,
 }) => {
-  const { event, payload } = eventData;
-
-  const message =
-    event === 'ITEM_OUT_OF_STOCK'
-      ? `The product "${payload.product.title}" is now out of stock and has been removed from your cart.`
-      : event === 'ITEM_QUANTITY_UPDATED'
-      ? `The quantity for "${payload.product.title}" has been reduced to ${payload.quantity}.`
-      : 'Your cart has been updated.';
+  const messages = eventData.map(({ event, payload }) => {
+    if (event === 'ITEM_OUT_OF_STOCK') {
+      return `The product "${payload.product.title}" is now out of stock and has been removed from your cart.`;
+    } else if (event === 'ITEM_QUANTITY_UPDATED') {
+      return `The quantity for "${payload.product.title}" has been reduced to ${payload.quantity}.`;
+    }
+    return 'Your cart has been updated.';
+  });
 
   return (
     <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center">
@@ -38,7 +40,11 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
           maxWidth: '400px',
         }}
       >
-        <p>{message}</p>
+        {messages.map((message, index) => (
+          <p key={index} className="mb-2">
+            {message}
+          </p>
+        ))}
         <button
           onClick={onAcknowledge}
           className="px-3 py-1 bg-blue-500 text-white text-sm rounded focus:outline-none hover:bg-blue-600"
