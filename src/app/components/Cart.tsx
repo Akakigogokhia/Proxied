@@ -20,16 +20,16 @@ const Cart: React.FC<CartProps> = ({
   const lastItemRef = useRef<HTMLDivElement>(null);
   const prevItemsLength = useRef<number>(items.length);
 
-  if (!items || items.length === 0) {
-    return <p className="text-center text-gray-600">Your cart is empty.</p>;
-  }
-
   useEffect(() => {
-    if (items.length > prevItemsLength.current && lastItemRef.current) {
+    if (items?.length > prevItemsLength?.current && lastItemRef?.current) {
       lastItemRef.current.scrollIntoView({ behavior: 'smooth' });
     }
     prevItemsLength.current = items.length;
   }, [items]);
+
+  if (!items || items.length === 0) {
+    return <p className="text-center text-gray-600">Your cart is empty.</p>;
+  }
 
   return (
     <div className="space-y-4">

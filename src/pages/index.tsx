@@ -28,7 +28,8 @@ const Home = () => {
   } = useQuery(GET_CART);
 
   const [addItem] = useMutation(ADD_ITEM);
-  const [isAdding, setIsAdding] = useState(false);
+  const [isAdding, setIsAdding] = useState<boolean>(false);
+  const [isRemoving, setIsRemoving] = useState<boolean>(false);
   const [removeItem] = useMutation(REMOVE_ITEM);
   const [updateItemQuantity] = useMutation(UPDATE_ITEM_QUANTITY);
   const { setCart, acknowledged, setAcknowledged } = useCart();
@@ -110,6 +111,8 @@ const Home = () => {
   };
 
   const handleMinus = async (cartItemId: string, currentQuantity: number) => {
+    if (isRemoving) return;
+    setIsRemoving(true);
     try {
       if (currentQuantity <= 1) {
         const response = await removeItem({
@@ -131,6 +134,8 @@ const Home = () => {
       }
     } catch (err) {
       console.error('Error decreasing quantity:', err);
+    } finally {
+      setIsRemoving(false);
     }
   };
 
