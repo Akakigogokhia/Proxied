@@ -1,7 +1,7 @@
 import { useSubscription } from '@apollo/client';
 import { CART_ITEM_UPDATE } from '@/app/graphql/subscription';
 import { CartItemUpdate, CartItemUpdateData } from '@/types/global';
-import { GET_PRODUCTS, GET_CART } from '@/app/graphql/queries';
+import { GET_CART } from '@/app/graphql/queries';
 
 interface UseCartItemUpdateParams {
   setNotificationEvents: React.Dispatch<React.SetStateAction<CartItemUpdate[]>>;
@@ -13,8 +13,7 @@ export const useCartItemUpdate = ({
   setAcknowledged,
 }: UseCartItemUpdateParams): void => {
   useSubscription<CartItemUpdateData>(CART_ITEM_UPDATE, {
-    onSubscriptionData: ({ client, subscriptionData }) => {
-      console.log(subscriptionData, 'subscriptionData');
+    onData: ({ client, data: subscriptionData }) => {
       const eventData = subscriptionData.data?.cartItemUpdate;
       if (!eventData) return;
 
@@ -27,56 +26,31 @@ export const useCartItemUpdate = ({
       const { event, payload } = eventData;
 
       try {
-        const productsCache: any = client.readQuery({ query: GET_PRODUCTS });
-        if (productsCache) {
-          const currentProducts = productsCache.getProducts.products;
-          let updatedProducts = currentProducts;
-
-          if (event === 'ITEM_OUT_OF_STOCK') {
-            updatedProducts = currentProducts.filter(
-              (p: any) => p._id !== payload.product._id
-            );
-          } else if (event === 'ITEM_QUANTITY_UPDATED') {
-            updatedProducts = currentProducts.map((p: any) =>
-              p._id === payload.product._id
-                ? { ...p, availableQuantity: payload.quantity }
-                : p
-            );
-          }
-
-          client.writeQuery({
-            query: GET_PRODUCTS,
-            data: {
-              getProducts: { products: updatedProducts },
-              total: updatedProducts.length,
+        client.cache.modify({
+          id: `Product:${payload.product._id}`,
+          fields: {
+            availableQuantity() {
+              if (event === 'ITEM_OUT_OF_STOCK') {
+                return 0;
+              }
+              return payload.quantity;
             },
-          });
-        }
+          },
+        });
 
-        const cartCache: any = client.readQuery({ query: GET_CART });
-        if (cartCache?.getCart) {
-          let updatedCartItems = cartCache.getCart.items;
+        const cartCache: any = client.cache.readQuery({
+          query: GET_CART,
+        });
 
-          if (event === 'ITEM_OUT_OF_STOCK') {
-            updatedCartItems = updatedCartItems.filter(
-              (item: any) => item.product._id !== payload.product._id
-            );
-          } else if (event === 'ITEM_QUANTITY_UPDATED') {
-            updatedCartItems = updatedCartItems.map((item: any) =>
-              item._id === payload._id
-                ? {
-                    ...item,
-                    quantity: payload.quantity,
-                    product: payload.product,
-                  }
-                : item
-            );
-          }
-
-          client.writeQuery({
-            query: GET_CART,
-            data: {
-              getCart: { ...cartCache.getCart, items: updatedCartItems },
+        if (event === 'ITEM_OUT_OF_STOCK') {
+          client.cache.modify({
+            id: `Cart:${cartCache.getCart._id}`, // Target the Cart
+            fields: {
+              items(existingItems = [], { readField }) {
+                return existingItems.filter(
+                  (itemRef: any) => readField('_id', itemRef) !== payload._id
+                );
+              },
             },
           });
         }

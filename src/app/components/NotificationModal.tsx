@@ -32,7 +32,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
   return (
     <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center">
       <div
-        className="bg-black p-5 rounded-lg max-w-[400px]"
+        className="bg-black p-5 rounded-lg max-w-[400px]  max-h-[90%] overflow-auto"
         style={{
           backgroundColor: 'black',
           padding: '20px',

@@ -19,7 +19,6 @@ export const useComputedProducts = (productsData: any, cartData: any) => {
             prod.availableQuantity - (cartQuantities[prod._id] || 0),
         })
       );
-      console.log(updatedProducts);
       setComputedProducts(updatedProducts);
     }
   }, [productsData, cartData]);

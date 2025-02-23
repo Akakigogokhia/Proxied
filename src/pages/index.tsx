@@ -8,7 +8,7 @@ import {
   UPDATE_ITEM_QUANTITY,
 } from '@/app/graphql/mutations';
 import { GET_PRODUCTS, GET_CART } from '@/app/graphql/queries';
-import { CART_ITEM_UPDATE } from '@/app/graphql/subscription';
+import { useCartItemUpdate } from '@/app/hooks/useCartSubscription';
 import { useComputedProducts } from '@/app/hooks/useComputedProducts';
 import { cartAddItemSchema } from '@/app/lib/validation';
 import { useMutation, useQuery, useSubscription } from '@apollo/client/react';
@@ -25,8 +25,7 @@ const Home = () => {
     error: errorCart,
     data: cartData,
     refetch: refetchCart,
-  } = useQuery(GET_CART, { fetchPolicy: 'network-only' });
-  const { refetch: refetchProducts } = useQuery(GET_PRODUCTS);
+  } = useQuery(GET_CART);
 
   const [addItem] = useMutation(ADD_ITEM);
   const [isAdding, setIsAdding] = useState(false);
@@ -46,17 +45,9 @@ const Home = () => {
     {}
   );
 
-  useSubscription(CART_ITEM_UPDATE, {
-    onSubscriptionData: async ({ subscriptionData }) => {
-      const eventData = subscriptionData.data?.cartItemUpdate;
-      console.log(eventData);
-      if (eventData) {
-        setAcknowledged(false);
-        await refetchCart();
-        await refetchProducts();
-        setNotificationEvents((prev) => [...prev, eventData]);
-      }
-    },
+  useCartItemUpdate({
+    setNotificationEvents,
+    setAcknowledged,
   });
 
   const handleAcknowledge = () => {
